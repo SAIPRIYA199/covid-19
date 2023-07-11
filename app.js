@@ -81,7 +81,7 @@ app.get("/districts/:districtId/", async (request, response) => {
         SELECT * FROM district WHERE district_id = ${districtId};
     `;
   const district = await db.get(getDistrict);
-  response.send(district);
+  response.send(convertCase(district));
 });
 
 //Delete district
@@ -113,4 +113,29 @@ app.put("/districts/:districtId/", async (request, response) => {
   response.send("District Details Updated");
 });
 
-///
+///Get stats
+app.get("/states/:stateId/stats/", async (request, response) => {
+  const { stateId } = request.params;
+  const getStatsQuery = `
+    SELECT SUM(cases) AS totalCases,
+        SUM(cured) AS totalCured,
+        SUM(active) AS totalActive,
+        SUM(deaths) AS totalDeaths
+    FROM district
+    WHERE state_id = ${stateId};`;
+  const statResponse = await db.get(getStatsQuery);
+  response.send(convertCase(statResponse));
+});
+
+///Get stateName
+app.get("/districts/:districtId/details/", async (request, response) => {
+  const { districtId } = request.params;
+  const stateDetails = `
+        SELECT state_name
+        FROM state JOIN district 
+            ON state.state_id = district.state_id
+        WHERE district.district_id = ${districtId};
+    `;
+  const stateName = await db.get(stateDetails);
+  response.send({ stateName: stateName.state_name });
+});
